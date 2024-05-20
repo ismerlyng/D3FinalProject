@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Financial Literacy Charts</title>
+        <script src= "https://d3js.org/d3.v7.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.2.7/d3.layout.cloud.min.js"></script>
+        <style type="text/css">
+            h1 {
+              font-family: "Helvetica", "Arial", sans-serif;
+              font-size: 30px;
+              color: maroon;
+            }
+
+            h2 {
+              font-family: "Helvetica", "Arial", sans-serif;
+              font-size: 16px;
+              color: black;
+            }
+
+            p {
+              font-family: "Helvetica", "Arial", sans-serif;
+              font-size: 14px;
+              color: black;
+            }
+
+            .axis path, 
+            .axis line{
+                stroke: black;
+            }
+            .axis text{
+                font-family: "Helvetica", "Arial", sans-serif;
+                color: black;
+                font-size: 14px
+                }        
+            
+            button {
+                display: inline-block;
+                background-color: maroon;
+                border: none;
+                color: white;
+                text-align: center;
+                text-decoration: none;
+                border-radius: 2px; 
+                font-size: 164x;   
+            }
+
+            button:hover {
+                background-color: bisque;
+
+            }
+
+            text {
+            font-family: Arial, sans-serif;
+            }
+
+            #region-update {
+            font-family: Arial;
+            font-weight: bold;
+            color: maroon;
+            font-size: 14px;
+            }
+
+            a:visited {
+            text-decoration: none;
+            color: #000;
+            }
+
+        </style>
+    </head>
+    <body>
+    	
+        <h1> Access to Financial Literacy in U.S. High Schools </h1>
+        <h2> Designed by Ismerlyn Gonzalez </h2>
+        <p> The charts below visualize student access to financial literacy courses in U.S. high schools from 2019-2023.</p>
+
+        <br>
+        <button id="buttonCity">City</button>
+        <button id="buttonTown">Town</button>
+        <button id="buttonSuburb">Suburb</button>
+        <button id="buttonRural">Rural</button>
+        <br>
+
+        <div id="svg1"></div>  
+        <p> The above bar chart displays the total number of financial literacy courses in each U.S. region. The buttons above the chart display this data by type of setting in each region (city, town, suburb, or rural setting). When clicking on "city," for example, the northeast has the lowest number of courses, which can be counterintuitive to how many high schools exist in the northeast's major cities, like NYC. It may suggest gaps in how the data was collected, or that there are really that few schools that offer financial literacy courses. </p>
+        
+        <div id="region-update">Region: </div>
+        <div id="svg2"></div>  
+        <p> The above word cloud displays the top 50 most common words among the dataset's financial literacy course descriptions. Further, the cloud automatically updates by region to allow the viewer to compare and contrast the data. Off the bat, it's obvious that words like "students" and "financial" are among the most common. The words' size is relative to their frequency in the data, so "students" appears the largest for the south because it appeared in those descriptions the most. The goal with this word cloud was to glean what different regions of the U.S. have tried to teach their high school students about financial literacy. Overall, they seem pretty consistent in what key topics they are emphasizing. </p> 
+
+        <br>
+        <p> This project was my attempt at communicating a birds-eye view of a long and complex dataset about almost 20,000 classes in the U.S. Prior to visualization, I condensed high school data into U.S. regions. From there, I grouped them by setting. I also conducted a text analysis of word frequency by region, which resulted in the word cloud visualization. Various online sources assisted me in the creation of these graphics:  </p>  
+
+        
+        
+        <p> <a href="https://cdnjs.com/libraries/d3-cloud">1. D-3 cloud library</a></p>
+        <p> <a href="https://gist.github.com/joews/9697914">2. D-3 cloud example</a></p>
+        <p> <a href="https://d3-graph-gallery.com/graph/wordcloud_custom.html">3. Another D-3 cloud example </a></p>
+
+
+        <p> Thanks for visiting! </p>  
+
+       
+        <script type="text/javascript">
+            
+        //Consts/global variables  
+            const w = 500;
+            const h = 500;
+            const margin = 50;
+            
+        //Data
+
+
+            Promise.all([
+            d3.csv("classes.csv"), // files[0] will contain classes.csv
+            d3.csv("words.csv"),  // files[1] will contain words.csv
+            ]).then(function(files) {
+            const data = {
+                "bar": files[0].map(d => { return {"region": d.region, "count": +d.count, "city": +d.city, "town": +d.town, "suburb": +d.suburb, "rural": +d.rural}}),
+                "cloud": files[1].map(d => { return {"word": d.word, "region": d.region, "counts": +d.counts}}) 
+            }
+            console.log("two datasets", data);
+        
+         
+        
+        //Chart 1 - Bar chart
+            
+            //scales
+            const maxY = d3.max(data.bar, d => d.count);
+
+            const xScale = d3.scaleBand()
+                            .domain(data.bar.map(d => d.region))
+                            .range([margin, w - margin])
+                            .paddingInner(.02);
+            
+            const yScale = d3.scaleLinear()
+                            .domain([0, maxY]) 
+                            .range([h - margin, margin]);
+            
+            //axes
+            const bottomAxis = d3.axisBottom().scale(xScale);
+            const leftAxis = d3.axisLeft().scale(yScale);
+
+
+            //Select SVG 1  
+            const svg1 = d3.select("#svg1")
+                    .append("svg")
+                    .attr("width", w)
+                    .attr("height", h);
+
+            //Bars
+            svg1.selectAll("rect") 
+                .data(data.bar) 
+                .enter()
+                .append("rect")
+                .attr("x", d => xScale(d.region)) 
+                .attr("y", d => yScale(d.count)) 
+                .attr("width", xScale.bandwidth()) 
+                .attr("height", d => (h-margin) - yScale(d.count))
+                .attr("fill", "orange");
+
+            svg1.selectAll("text")
+                .data(data.bar)
+                .enter()
+                .append("text")
+                .attr("x", d => xScale(d.region) + xScale.bandwidth() / 2) 
+                .attr("y", d => yScale(d.count) - 5) 
+                .attr("text-anchor", "middle")
+                .attr("fill", "black") 
+                .attr("font-size", "14px")
+                .attr("font-family", "Helvetica, Arial, sans-serif")
+                .text(d => d.count); 
+
+            //Call SVG1 axes
+            svg1.append("g")
+                .attr("class", "axis")
+                .attr("transform", "translate(0," + (h - margin) + ")") 
+                .call(bottomAxis); 
+
+            svg1.append("g")
+                .attr("class", "axis")
+                .attr("transform", "translate(" + margin + ",0)")
+                .call(leftAxis); 
+
+            //Update the left axis
+            svg1.select(".axisLeft")
+            .transition()
+            .duration(1000)
+            .call(leftAxis);
+            
+            //Define drawData
+            
+            function drawData(dataType) {
+            
+            //Update the data based on the selected data type, e.g., "city", "town", etc.
+            const newData = data.bar.map(d => {
+                return {"region": d.region, "count": +d[dataType]};
+            });
+        
+            //Update the yScale based on the new data
+            const maxY = d3.max(newData, d => d.count);
+            yScale.domain([0, maxY]);
+
+            //Update the height and y position of the bars
+            svg1.selectAll("rect")
+                .data(newData)
+                .transition()
+                .duration(1000)
+                .attr("y", d => yScale(d.count))
+                .attr("height", d => (h - margin) - yScale(d.count));
+            
+
+            //Update the text labels
+            svg1.selectAll("text")
+                .data(newData)
+                .transition()
+                .duration(1000)
+                .attr("x", d => xScale(d.region) + xScale.bandwidth() / 2) 
+                .attr("y", d => yScale(d.count) - 5) 
+                .text(d => d.count); 
+            };
+
+            //Button click events
+            d3.selectAll("button").on("click", (event,d)=>{
+                const selected = event.currentTarget;
+                    if (selected.id == "buttonCity"){
+                    drawData("city")
+                    } else if (selected.id == "buttonTown"){
+                    drawData("town")
+                    } else if (selected.id == "buttonSuburb"){
+                    drawData("suburb")
+                    } else if (selected.id == "buttonRural"){
+                    drawData("rural")
+                    } else {
+                    drawData("count")
+                    }})
+            
+            drawData("count")
+        
+
+        //Chart 2 - Word cloud
+
+            //Scale for font size
+            const fontSizeScale = d3.scaleLinear()
+                    .domain([0, d3.max(data.cloud, d => +d.counts)])
+                    .range([10, 50]);
+
+            //Select SVG 2  
+            const svg2 = d3.select("#svg2")//to call an id be sure to use #
+                    .append("svg")
+                    .attr("width", w)
+                    .attr("height", h);
+            
+            
+            //Create color scale
+            const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
+        
+        
+            //Function to update word cloud based on selected region
+            function updateWordCloud(region) {
+                const filteredData = data.cloud.filter(d => d.region === region);
+
+            //Update displayed region at the top
+            d3.select("#region-update").text("Region: " + region)
+    
+            //Remove previous word cloud
+            svg2.selectAll("g").remove();
+    
+            //Create the word cloud layout
+            const layout = d3.layout.cloud()
+                .size([w, h])
+                .words(filteredData.map(d => ({text: d.word, size: fontSizeScale(+d.counts)})))
+                .padding(5)
+                .rotate(() => ~~(Math.random() * 2) * 90)
+                .font("Arial")
+                .fontSize(d => d.size)
+                .on("end", draw);
+    
+            layout.start();
+    
+            //Draw the word cloud
+            function draw(words) {
+                svg2.append("g")
+                    .attr("transform", `translate(${w / 2},${h / 2})`)
+                    .selectAll("text")
+                    .data(words)
+                    .enter()
+                    .append("text")
+                    .style("font-size", d => d.size + "px")
+                    .style("fill", (d,i) => colorScale(i))
+                    .attr("text-anchor", "middle")
+                    .attr("transform", d => `translate(${d.x},${d.y}) rotate(${d.rotate})`)
+                    .text(d => d.text);
+                }
+            }
+    
+            // Automatically cycle through regions
+            function autoUpdateRegions(regions) {
+                let index = 0;
+                setInterval(function() {
+                    updateWordCloud(regions[index]);
+                    index = (index + 1) % regions.length; // Loop through regions
+                }, 3000); // Adjust the interval (in milliseconds) as needed
+            }
+        
+            //Define regions
+            const regions = ["South", "West", "Northeast", "Midwest"];
+        
+            //Start automatic cycle
+            autoUpdateRegions(regions);
+        });
+    
+
+        </script>
+    </body>
+</html>
