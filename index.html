@@ -18,6 +18,12 @@
               color: black;
             }
 
+            h3 {
+              font-family: "Helvetica", "Arial", sans-serif;
+              font-size: 14px;
+              color: black;
+            }
+
             p {
               font-family: "Helvetica", "Arial", sans-serif;
               font-size: 14px;
@@ -31,7 +37,7 @@
             .axis text{
                 font-family: "Helvetica", "Arial", sans-serif;
                 color: black;
-                font-size: 14px
+                font-size: 12px
                 }        
             
             button {
@@ -82,22 +88,26 @@
         <br>
 
         <div id="svg1"></div>  
-        <p> The above bar chart displays the total number of financial literacy courses in each U.S. region. The buttons above the chart display this data by type of setting in each region (city, town, suburb, or rural setting). When clicking on "city," for example, the northeast has the lowest number of courses, which can be counterintuitive to how many high schools exist in the northeast's major cities, like NYC. It may suggest gaps in how the data was collected, or that there are really that few schools that offer financial literacy courses. </p>
+        <p> The above bar chart displays the total number of financial literacy courses in each U.S. region. When clicked, the buttons show the number of courses by type of setting in each region (city, town, suburb, or rural setting). When clicking on "city," for example, the bar chart shows that the Northeast has the lowest number of courses, which can be counterintuitive to how many high schools exist in the Northeast's major cities alone. It may suggest gaps in how the data was collected, or be indicative of low financial literacy course offerings in some U.S. regions. </p>
         
         <div id="region-update">Region: </div>
         <div id="svg2"></div>  
-        <p> The above word cloud displays the top 50 most common words among the dataset's financial literacy course descriptions. Further, the cloud automatically updates by region to allow the viewer to compare and contrast the data. Off the bat, it's obvious that words like "students" and "financial" are among the most common. The words' size is relative to their frequency in the data, so "students" appears the largest for the south because it appeared in those descriptions the most. The goal with this word cloud was to glean what different regions of the U.S. have tried to teach their high school students about financial literacy. Overall, they seem pretty consistent in what key topics they are emphasizing. </p> 
+        <p> The above word cloud displays the 50 most common words among the dataset's financial literacy course descriptions. The cloud automatically updates by region to allow the user to compare and contrast the data. At first glance, words like "students" and "financial" are among the most common. The size of the words is relative to their frequency in the data, so "students" appears the largest for the South because it appears in those descriptions the most. The goal with this word cloud is to glean what schools in different regions of the U.S. have tried to teach their students about financial literacy. Overall, they seem pretty consistent in what key topics they emphasize. </p> 
+
+        <p> This project was my attempt at communicating a birds-eye view of a complex dataset with approximately 20,000 classes. Prior to visualization, I condensed the high school data into U.S. regions, and disaggregated by type of setting, as shown in the bar chart. I also conducted a text analysis of word frequency by region, which resulted in the word cloud visualization. Various online sources assisted me in the creation of these graphics (listed below).  </p>  
 
         <br>
-        <p> This project was my attempt at communicating a birds-eye view of a long and complex dataset about almost 20,000 classes in the U.S. Prior to visualization, I condensed high school data into U.S. regions. From there, I grouped them by setting. I also conducted a text analysis of word frequency by region, which resulted in the word cloud visualization. Various online sources assisted me in the creation of these graphics:  </p>  
+        <h3> Sources </h3>
+        <p> <a href="https://osf.io/ksah9/wiki/home/">Financial literacy course dataset</a></p>
+        <p> <a href="https://www.pixelstech.net/article/1589685639-A-simple-example-of-drawing-bar-chart-with-label-using-d3-js#google_vignette">Bar chart label example</a></p>
+        <p> <a href="https://daydreamingnumbers.com/blog/bar-charts-in-d3/">More information on bar charts</a></p>
+        <p> <a href="https://d3-graph-gallery.com/graph/barplot_button_data_hard.html">Bar chart + button interaction example</a></p>
+        <p> <a href="https://cdnjs.com/libraries/d3-cloud">D3 cloud library</a></p>
+        <p> <a href="https://gist.github.com/joews/9697914">D3 cloud example</a></p>
+        <p> <a href="https://d3-graph-gallery.com/graph/wordcloud_custom.html">Another D3 cloud example </a></p>
+        <p> <a href="https://groups.google.com/g/d3-js/c/v5SByVUqR3s?pli=1">Deleting SVGs</a></p>
 
-        
-        
-        <p> <a href="https://cdnjs.com/libraries/d3-cloud">1. D-3 cloud library</a></p>
-        <p> <a href="https://gist.github.com/joews/9697914">2. D-3 cloud example</a></p>
-        <p> <a href="https://d3-graph-gallery.com/graph/wordcloud_custom.html">3. Another D-3 cloud example </a></p>
-
-
+        <br>
         <p> Thanks for visiting! </p>  
 
        
@@ -159,6 +169,8 @@
                 .attr("height", d => (h-margin) - yScale(d.count))
                 .attr("fill", "orange");
 
+            //Bar labels
+
             svg1.selectAll("text")
                 .data(data.bar)
                 .enter()
@@ -167,7 +179,7 @@
                 .attr("y", d => yScale(d.count) - 5) 
                 .attr("text-anchor", "middle")
                 .attr("fill", "black") 
-                .attr("font-size", "14px")
+                .attr("font-size", "12px")
                 .attr("font-family", "Helvetica, Arial, sans-serif")
                 .text(d => d.count); 
 
@@ -189,12 +201,11 @@
             .call(leftAxis);
             
             //Define drawData
+            function drawData(updateCounts) {
             
-            function drawData(dataType) {
-            
-            //Update the data based on the selected data type, e.g., "city", "town", etc.
+            //Create new variable to update the counts based on setting
             const newData = data.bar.map(d => {
-                return {"region": d.region, "count": +d[dataType]};
+                return {"region": d.region, "count": +d[updateCounts]};
             });
         
             //Update the yScale based on the new data
@@ -255,7 +266,6 @@
             //Create color scale
             const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
         
-        
             //Function to update word cloud based on selected region
             function updateWordCloud(region) {
                 const filteredData = data.cloud.filter(d => d.region === region);
@@ -263,9 +273,9 @@
             //Update displayed region at the top
             d3.select("#region-update").text("Region: " + region)
     
-            //Remove previous word cloud
+            //Ensure to remove previous word cloud as it cycles through
             svg2.selectAll("g").remove();
-    
+
             //Create the word cloud layout
             const layout = d3.layout.cloud()
                 .size([w, h])
@@ -293,7 +303,8 @@
                     .text(d => d.text);
                 }
             }
-    
+            
+
             // Automatically cycle through regions
             function autoUpdateRegions(regions) {
                 let index = 0;
